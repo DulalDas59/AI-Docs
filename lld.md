@@ -198,7 +198,7 @@ If `< T1` (e.g., `0.6`), flag:
 #### Tools, Libraries & Algorithms (Step 2)
 
 - **Primary Libraries:** `NumPy`, `SciPy`, `OpenCV`
-- **Algorithms:** Anchor-event alignment, piecewise linear drift correction
+- **Algorithms:** Anchor-event alignment(correlating discrete spikes like hard braking to visual jerks), piecewise linear drift correction(if long clips show clock drift).
 
 ---
 
