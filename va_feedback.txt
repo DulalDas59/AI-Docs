@@ -120,7 +120,7 @@ If you want, I can turn this into a **director-facing feedback note** or a **sli
 
 
 
-
+--------------------------------
 This is a **good concept deck**, but for **your use case** I would **not freeze this as the final architecture** yet.
 
 My honest review:
@@ -618,3 +618,207 @@ So for your use case, I would say:
 * **reduce Phase-1 scope back to collision / near-collision review intelligence**
 * **treat behavior expansion as later phases**
 
+---------------------------------------------
+
+What we should keep as-is
+
+These are good and should stay in the main approach:
+
+1. Multimodal framing
+
+video
+audio
+telemetry
+SME / customer KB
+
+2. Structured output
+
+outcome
+trigger
+confidence
+evidence / causal summary
+validation status
+review queue readiness
+
+3. SME / policy validation idea
+
+validation layer
+compliance / review gating
+human review loop
+
+4. Reason families
+
+distraction
+awareness
+conduct
+condition
+unbelted
+custom reasons
+
+These should stay, but as supporting reason signals, not as guaranteed final broad behavior coverage.
+
+What we should keep, but modify
+
+This is the key part.
+
+1. Change GPT-4o from primary adjudicator to secondary copilot
+Keep:
+GPT-4o for structured summary / causal explanation / analyst assist
+Modify:
+
+Do not let GPT-4o be the main source of:
+
+final outcome
+final trigger
+policy-critical classification
+Better role:
+explanation polish
+optional causal narrative
+analyst-facing summary over structured evidence
+2. Make telemetry a first-class branch
+Keep:
+multimodal fusion idea
+Modify:
+
+Telemetry must sit at the top architecture layer, not be hidden inside downstream rules.
+
+Telemetry should drive:
+brake onset
+max decel
+jerk
+speed delta
+event-shape descriptors
+reaction timing
+harsh event confirmation
+
+This is one of the biggest changes I would make.
+
+3. Keep the behavior/reason taxonomy, but reduce Phase-1 commitment
+Keep:
+the reason catalog
+the mapping tables
+the behavior groups
+Modify:
+
+In Phase 1, output only:
+
+final outcome
+final trigger
+evidence summary
+maybe top 1–3 high-confidence reason tags
+
+Do not promise reliable broad coverage of the full reason space in the first release.
+
+4. Strengthen the video branch
+Keep:
+video detection and tracking concept
+Modify:
+
+Replace the lighter demo-style backbone with a more structured one:
+
+YOLO11x + ByteTrack
+SegFormer for lane/drivable
+DepthAnythingV2
+ego-motion proxy
+TTC / overlap / lane-conflict / reaction-delay features
+
+That aligns much better with collision / near-collision review.
+
+5. Keep windowing, but make it multi-resolution
+Keep:
+0.5s windows as a useful aggregation view
+Modify:
+
+Also add:
+
+250 ms windows
+500 ms windows
+1 s aggregates
+pre-trigger / trigger / post-trigger segmentation
+
+That gives the system more temporal fidelity.
+
+6. Keep rules, but narrow their role
+Keep:
+rule engine
+fusion logic
+policy mapping
+Modify:
+
+Use rules mainly for:
+
+gating
+contradiction checks
+escalation
+policy constraints
+compliance scoring
+
+Do not make 250+ rules the primary reasoning bridge from raw detections to final output.
+
+7. Keep SME validation, but make it deterministic first
+Keep:
+SME validation layer
+KB / RAG support
+compliance check
+Modify:
+
+Primary validation should be:
+
+structured KB rules
+deterministic policy checks
+outcome adjudication logic
+
+Retrieval should be:
+
+secondary
+for similar examples
+analyst support
+narrative help
+The final merged architecture I would recommend
+Layer 1 — Inputs
+Exterior video
+Optional interior video
+Audio
+Telemetry
+Customer taxonomy
+SME / policy KB
+Layer 2 — Ingest / sync / preprocess
+media validation
+timestamp integrity
+video-audio-telemetry synchronization
+quality flags
+privacy masking
+Layer 3 — Structured feature extraction
+object detection + tracking
+lane / drivable reasoning
+depth / ego-motion
+audio event cues
+telemetry event-shape features
+Layer 4 — Event state abstraction
+brake event state
+lead hazard state
+evasive maneuver state
+lane departure state
+other high-value structured states
+Layer 5 — Core reasoning
+trigger engine
+outcome engine
+contradiction detection
+confidence propagation
+KB-governed adjudication
+Layer 6 — Review assist
+structured summary
+evidence package
+top reason tags
+causal chain
+validation status
+Layer 7 — Optional LLM copilot
+GPT-4o summary refinement
+analyst narrative
+optional reasoning-over-structured-artifacts
+Layer 8 — Human review
+reviewer validation
+edit / override
+final submit
+
+That is the version I trust.
