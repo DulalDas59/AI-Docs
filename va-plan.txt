@@ -1,0 +1,1115 @@
+Yes — this is a good direction, but I would **clean it up and separate a few mixed tasks** before you start.
+
+Right now the list has the right ingredients, but a few items are overlapping:
+
+* **Video Processing / Audio Processing / Telemetry Processing** are too broad
+* **Classification/Prediction - Outcome Reasoning (Trigger Reasoning)** mixes two different engines
+* **Contradiction Detection (SME RAG Validation)** mixes two different concerns
+* **Outcome Reasoning** appears twice
+* **Audio transcribe** should be treated as **optional**, not core, unless you know spoken content is actually useful for your event taxonomy
+
+## My recommended revised task plan
+
+### Phase 0 — Input readiness
+
+1. **Ingest and Media Validation**
+2. **Video Processing**
+3. **Audio Processing**
+4. **Telemetry Processing**
+
+This phase is about:
+
+* file validation
+* metadata extraction
+* modality availability flags
+* frame/audio/telemetry integrity checks
+
+---
+
+### Phase 1 — Alignment and signal preparation
+
+5. **Canonical Time Synchronization**
+6. **Advanced Preprocessing and Quality Gating**
+
+This phase is about:
+
+* canonical timeline creation
+* sync quality scoring
+* blur / glare / flicker / audio SNR / telemetry smoothing
+* quality flags and modality confidence setup
+
+---
+
+### Phase 2 — Feature extraction
+
+7. **Exterior Video Scene Evidence**
+8. **Audio Evidence**
+9. **Temporal Video & Audio Data Aggregation**
+
+This phase is about:
+
+* actor detection and tracking
+* scene features
+* acoustic markers
+* 250 ms / 500 ms / 1 s windows
+* per-window feature tables
+
+---
+
+### Phase 3 — Structured abstraction and reasoning
+
+10. **Fusion Matrix / Event State Abstraction**
+11. **Trigger Reasoning**
+12. **Outcome Reasoning**
+13. **Contradiction Detection + Confidence Propagation**
+14. **SME / KB Validation**
+
+This is the most important cleanup.
+
+I would **separate these clearly**:
+
+* **Event State Abstraction**
+  Converts raw multimodal features into interpretable states
+
+* **Trigger Reasoning**
+  Predicts likely trigger
+
+* **Outcome Reasoning**
+  Predicts likely outcome
+
+* **Contradiction Detection + Confidence Propagation**
+  Checks evidence inconsistency and adjusts confidence
+
+* **SME / KB Validation**
+  Validates or adjudicates the final output against policy / taxonomy / rules
+
+That order is cleaner and much easier to implement.
+
+---
+
+## Where “Audio transcribe” should go
+
+I would move **Audio transcribe** out of the core path and relabel it as:
+
+### Optional supporting task
+
+* **Audio transcription / speech extraction (optional)**
+
+Reason:
+For your current Phase-1 scope, audio is mainly useful for:
+
+* impact-like peaks
+* horn-like cues
+* harsh event timing
+* possibly cabin speech presence as a soft cue
+
+Unless your customer’s audio really contains review-relevant spoken information, transcription should **not block the main PoC**.
+
+So I would place it under:
+
+### Deferred / optional branch
+
+15. **Audio Transcription / Speech Signal Extraction (Optional)**
+
+---
+
+# Final recommended task list
+
+Here is the cleaned version I would use:
+
+1. **Ingest and Media Validation**
+2. **Video Processing**
+3. **Audio Processing**
+4. **Telemetry Processing**
+5. **Canonical Time Synchronization**
+6. **Advanced Preprocessing and Quality Gating**
+7. **Exterior Video Scene Evidence**
+8. **Audio Evidence**
+9. **Temporal Video & Audio Data Aggregation**
+10. **Fusion Matrix / Event State Abstraction**
+11. **Trigger Reasoning**
+12. **Outcome Reasoning**
+13. **Contradiction Detection + Confidence Propagation**
+14. **SME / KB Validation**
+15. **Audio Transcription / Speech Extraction (Optional, later)**
+
+---
+
+# Best dependency order
+
+If you want the fastest implementation order, do it like this:
+
+### Wave 1
+
+* Ingest and Media Validation
+* Video Processing
+* Audio Processing
+* Telemetry Processing
+
+### Wave 2
+
+* Canonical Time Synchronization
+* Advanced Preprocessing and Quality Gating
+
+### Wave 3
+
+* Exterior Video Scene Evidence
+* Audio Evidence
+* Temporal Video & Audio Data Aggregation
+
+### Wave 4
+
+* Fusion Matrix / Event State Abstraction
+* Trigger Reasoning
+* Outcome Reasoning
+
+### Wave 5
+
+* Contradiction Detection + Confidence Propagation
+* SME / KB Validation
+
+### Optional later
+
+* Audio Transcription / Speech Extraction
+
+---
+
+# My comments on each task
+
+## Ingest and Media Validation
+
+Keep this exactly. It is foundational.
+
+## Video / Audio / Telemetry Processing
+
+Good to keep, but define them as **modality-specific loaders and base processors**, not the full feature extraction stage.
+
+## Canonical Time Synchronization
+
+Must stay early. Very important.
+
+## Advanced Preprocessing and Quality Gating
+
+Correct placement. Keep it before feature extraction.
+
+## Exterior Video Scene Evidence
+
+Correct. This is your main visual branch.
+
+## Audio Evidence
+
+Correct. Keep audio as support evidence only.
+
+## Temporal Video & Audio Data Aggregation
+
+Good, but I would slightly rename it to:
+
+**Temporal Multimodal Aggregation**
+
+because later telemetry should also feed this.
+
+## Fusion Matrix / Event State Abstraction
+
+Very good idea. Keep this.
+
+## Trigger Reasoning
+
+Must be separate from outcome reasoning.
+
+## Outcome Reasoning
+
+Must be separate and must come after state abstraction.
+
+## Contradiction Detection
+
+Very important. Keep this independent from KB validation.
+
+## SME RAG Validation
+
+Rename this to:
+
+**SME / KB Validation**
+
+And inside it, keep:
+
+* deterministic rule validation first
+* retrieval/RAG only as supporting mechanism
+
+## Audio transcribe
+
+Optional only.
+
+---
+
+# Best final wording for a project plan
+
+If you want something more formal, use this structure:
+
+### Core PoC Tasks
+
+* Ingest and Media Validation
+* Modality Processing: Video, Audio, Telemetry
+* Canonical Time Synchronization
+* Advanced Preprocessing and Quality Gating
+* Feature Extraction: Exterior Video Scene Evidence, Audio Evidence
+* Temporal Multimodal Aggregation
+* Event State Abstraction
+* Trigger Reasoning
+* Outcome Reasoning
+* Contradiction Detection and Confidence Propagation
+* SME / KB Validation
+
+### Optional Extension Tasks
+
+* Audio Transcription / Speech Extraction
+* Interior Video / DMS Support
+* Similar Event Retrieval
+* Knowledge Graph Projection
+
+---
+
+# My final recommendation
+
+This is the version I would move forward with:
+
+**Ingest/validation → modality processing → sync → preprocessing/quality → exterior video evidence + audio evidence → temporal aggregation → event state abstraction → trigger reasoning → outcome reasoning → contradiction/confidence → SME/KB validation**
+
+That is clean, modular, and aligned with the Phase-1 architecture you want.
+
+If you want, I’ll convert this into a **proper modular Jira backlog with story names, dependencies, and estimates**.
+
+
+----------
+Yes — here is a **clean task plan with timelines** for the scope you finalized.
+
+## Recommended PoC timeline
+
+**3 weeks** for a credible end-to-end PoC
+**2 weeks** only if you keep it very thin and rules-first
+
+I recommend planning for **3 weeks**.
+
+---
+
+# Phase-1 PoC task plan with timelines
+
+## Week 1 — Input readiness, modality prep, and synchronization
+
+### 1. Ingest and Media Validation
+
+**Duration:** 1.5 days
+**Goal:** validate all incoming assets and extract basic metadata
+
+**Tasks**
+
+* build video metadata extractor
+* build audio metadata extractor
+* build telemetry CSV validator
+* add modality availability flags
+* add frame timestamp integrity checks
+* create media manifest output
+
+**Deliverables**
+
+* `media_manifest.json`
+* `timestamp_integrity_report.json`
+* `audio_probe_report.json`
+* `telemetry_probe_report.json`
+
+---
+
+### 2. Video Processing
+
+**Duration:** 0.5 day
+**Goal:** set up base video loading and frame extraction utilities
+
+**Tasks**
+
+* frame extraction utility
+* FPS-based frame indexing
+* canonical frame list creation
+* frame sampling helper for downstream modules
+
+**Deliverables**
+
+* `video_loader.py`
+* `frame_index_map.json`
+
+---
+
+### 3. Audio Processing
+
+**Duration:** 0.5 day
+**Goal:** load and normalize audio for downstream evidence extraction
+
+**Tasks**
+
+* audio loading
+* waveform normalization
+* duration alignment prep
+* basic signal checks
+
+**Deliverables**
+
+* `audio_loader.py`
+* `audio_basic_report.json`
+
+---
+
+### 4. Telemetry Processing
+
+**Duration:** 0.5 day
+**Goal:** load, normalize, and clean telemetry
+
+**Tasks**
+
+* CSV parsing
+* column validation
+* timestamp ordering
+* unit normalization
+* missing value cleanup
+
+**Deliverables**
+
+* `telemetry_loader.py`
+* `telemetry_cleaned.parquet`
+
+---
+
+### 5. Canonical Time Synchronization
+
+**Duration:** 2 days
+**Goal:** align all available modalities to one video-centered timeline
+
+**Tasks**
+
+* canonical timeline creation
+* visual motion proxy extraction
+* telemetry spike filtering
+* offset estimation via cross-correlation
+* telemetry interpolation to video timeline
+* sync quality scoring
+* downweight flag generation for weak sync
+
+**Deliverables**
+
+* `sync_report.json`
+* `aligned_telemetry.parquet`
+* `canonical_timeline.npy`
+
+---
+
+## Week 2 — Quality gating and feature extraction
+
+### 6. Advanced Preprocessing and Quality Gating
+
+**Duration:** 2 days
+**Goal:** lightly normalize inputs and tag uncertainty
+
+**Tasks**
+
+* blur detection
+* glare detection
+* luminance flicker detection
+* compression artifact heuristic
+* audio SNR estimation
+* cabin noise / mic occlusion heuristic
+* telemetry smoothing
+* event-shape descriptors
+
+**Deliverables**
+
+* `frame_level_quality_table.parquet`
+* `audio_quality_report.json`
+* `telemetry_shape_features.json`
+* `quality_flags.json`
+
+---
+
+### 7. Exterior Video Scene Evidence
+
+**Duration:** 2.5 days
+**Goal:** build the main video evidence branch
+
+**Tasks**
+
+* object detection integration
+* tracking integration
+* actor-track table generation
+* basic motion features
+* if time allows:
+
+  * lane / drivable reasoning
+  * depth summaries
+  * TTC proxy
+  * in-path flags
+
+**Deliverables**
+
+* `actor_track_table.parquet`
+* `scene_feature_matrix.parquet`
+* `key_visual_evidence.json`
+
+---
+
+### 8. Audio Evidence
+
+**Duration:** 1 day
+**Goal:** extract supporting audio cues
+
+**Tasks**
+
+* onset detection
+* peak picking
+* RMS energy analysis
+* merge nearby acoustic peaks
+* optional horn / impact-like candidate tags
+
+**Deliverables**
+
+* `audio_event_markers.json`
+* `audio_feature_summary.json`
+
+---
+
+### 9. Temporal Video & Audio Data Aggregation
+
+**Duration:** 1 day
+**Goal:** aggregate multimodal features into time windows
+
+**Tasks**
+
+* build 250 ms windows
+* build 500 ms windows
+* build 1 s windows
+* merge video/audio/telemetry features into common windows
+
+**Deliverables**
+
+* `window_level_feature_table.parquet`
+
+---
+
+## Week 3 — Reasoning, validation, and final output
+
+### 10. Fusion Matrix / Event State Abstraction
+
+**Duration:** 1.5 days
+**Goal:** convert raw features into interpretable event states
+
+**Tasks**
+
+* define abstraction rules
+* derive:
+
+  * `brake_event_state`
+  * `lead_hazard_state`
+  * `evasive_maneuver_state`
+  * `lane_departure_state` if available
+* create event-level summary
+
+**Deliverables**
+
+* `event_state_abstraction_table.parquet`
+* `event_state_summary.json`
+
+---
+
+### 11. Trigger Reasoning
+
+**Duration:** 1 day
+**Goal:** infer likely trigger
+
+**Tasks**
+
+* build rules-first trigger ranking
+* flatten structured features into vector `X`
+* output ranked trigger candidates
+* keep model hook ready for later
+
+**Deliverables**
+
+* `trigger_result.json`
+
+---
+
+### 12. Outcome Reasoning
+
+**Duration:** 1 day
+**Goal:** infer likely outcome from structured multimodal features
+
+**Tasks**
+
+* baseline outcome ranking
+* map evidence to outcome probabilities
+* prepare KB adjudication inputs
+
+**Deliverables**
+
+* `outcome_baseline_result.json`
+
+---
+
+### 13. Contradiction Detection + Confidence Propagation
+
+**Duration:** 0.75 day
+**Goal:** identify inconsistent evidence and adjust confidence
+
+**Tasks**
+
+* contradiction rules
+* sync-based confidence scaling
+* quality-based caps
+* reviewer-attention logic
+
+**Deliverables**
+
+* `contradiction_report.json`
+* `confidence_report.json`
+
+---
+
+### 14. SME / KB Validation
+
+**Duration:** 1 day
+**Goal:** apply final deterministic validation and adjudication
+
+**Tasks**
+
+* parse KB rules
+* validate trigger/outcome against policy logic
+* finalize adjudicated outcome
+* generate validation status
+
+**Deliverables**
+
+* `kb_validation_report.json`
+* `final_outcome_result.json`
+
+---
+
+### 15. Minimal Final Packaging
+
+**Duration:** 0.75 day
+**Goal:** produce final local PoC artifact
+
+**Tasks**
+
+* assemble all outputs
+* create local `ReviewAssistPackage.json`
+* create run manifest
+
+**Deliverables**
+
+* `ReviewAssistPackage.json`
+* `run_manifest.json`
+
+---
+
+# Optional / later task
+
+### 16. Audio Transcription / Speech Extraction
+
+**Duration:** 1–1.5 days
+**When:** only after core PoC works
+**Reason:** optional branch, not required for the first end-to-end build
+
+**Tasks**
+
+* speech detection
+* transcription integration if needed
+* extract spoken-content cues only if useful
+
+**Deliverables**
+
+* `audio_transcript.json`
+* `speech_presence_report.json`
+
+---
+
+# Timeline summary
+
+## Week 1
+
+* Ingest and Media Validation
+* Video Processing
+* Audio Processing
+* Telemetry Processing
+* Canonical Time Synchronization
+
+## Week 2
+
+* Advanced Preprocessing and Quality Gating
+* Exterior Video Scene Evidence
+* Audio Evidence
+* Temporal Video & Audio Data Aggregation
+
+## Week 3
+
+* Fusion Matrix / Event State Abstraction
+* Trigger Reasoning
+* Outcome Reasoning
+* Contradiction Detection + Confidence Propagation
+* SME / KB Validation
+* Final packaging
+
+---
+
+# Dependency order
+
+The implementation dependency is:
+
+**Ingest/Validation**
+→ **Video/Audio/Telemetry Processing**
+→ **Canonical Time Synchronization**
+→ **Advanced Preprocessing and Quality Gating**
+→ **Exterior Video Scene Evidence + Audio Evidence**
+→ **Temporal Video & Audio Data Aggregation**
+→ **Fusion Matrix / Event State Abstraction**
+→ **Trigger Reasoning + Outcome Reasoning**
+→ **Contradiction Detection + Confidence Propagation**
+→ **SME / KB Validation**
+→ **Final Packaging**
+
+---
+
+# Recommended milestone checkpoints
+
+## Milestone 1 — End of Week 1
+
+You should have:
+
+* validated modality inputs
+* canonical timeline
+* aligned telemetry
+* sync quality score
+
+## Milestone 2 — Mid Week 2
+
+You should have:
+
+* quality flags
+* actor tracks
+* audio markers
+* window-level features
+
+## Milestone 3 — End of Week 3
+
+You should have:
+
+* event-state abstraction
+* trigger result
+* outcome result
+* contradiction/confidence handling
+* final `ReviewAssistPackage.json`
+
+---
+
+# Fastest delivery advice
+
+To keep this within 3 weeks:
+
+* make **video mandatory**
+* keep **audio and telemetry optional**
+* do **rules-first reasoning**
+* keep **XGBoost / LightGBM hooks ready**, but don’t block on training
+* write **local JSON / Parquet artifacts first**
+* keep **audio transcription optional and later**
+
+If you want, I can turn this into a **Jira-ready backlog with Story IDs, priorities, dependencies, and estimates**.
+
+
+--------------------
+Phase-1 PoC Task Plan			
+Objective	Build the runtime-critical collision / near-collision review intelligence PoC with flexible input modes and structured reasoning.		
+In-Scope Modules	A Ingest & media validation; B Canonical time synchronization; C Advanced preprocessing & quality gating; D1 Exterior video scene evidence; D2 Audio evidence; D4 Temporal window aggregation; F Event state abstraction; G Trigger reasoning; H Contradiction detection + confidence propagation; I Outcome reasoning + KB adjudication		
+Supported Input Modes	Video only; Video + Audio; Video + Telemetry; Video + Audio + Telemetry		
+Target Timeline	3 weeks (05 May 2026 to 22 May 2026)		
+Delivery Strategy	Rules-first, model-hooks later; local JSON/Parquet outputs first; graceful degradation when optional modalities are missing.		
+Primary Milestone	One-event end-to-end dry run that produces ReviewAssistPackage.json and all key intermediate artifacts.		
+			
+			
+
+
+    ---------------
+
+    Wave	Module	Task ID	Task Name	Description	Owner	Priority	Status	Depends On	Input Modes	Deliverable	Tentative Start Date	Start Date	Tentative End Date	End Date	Estimate (days)	Blocking?	Notes
+Wave 0	Foundation	POC-00-01	Repo scaffold + contracts	Create repo structure, payload/output contracts, base config, sample payloads.	DD	High	Planned	-	All	Repo scaffold, schemas, configs	2026-05-04		2026-05-04		1	Yes	Needed before module work starts.
+Wave 0	Foundation	POC-00-02	Artifact/output writer baseline	Create local JSON/Parquet writer and run manifest structure.	DD	High	Planned	POC-00-01	All	Output writer, run manifest	2026-05-04		2026-05-04		1	Yes	Minimal persistence only.
+Wave 1	Module A	POC-01-01	Video metadata + ffprobe wrapper	Extract FPS, resolution, duration, codec, frame count.	DD	High	Planned	POC-00-01	Video required	media_manifest.json	2026-05-05		2026-05-05		1	Yes	Exterior video mandatory.
+Wave 1	Module A	POC-01-02	Frame timestamp integrity checker	Detect missing frames, duplicate frames, and variable FPS.	DD	High	Planned	POC-01-01	Video required	timestamp_integrity_report.json	2026-05-05		2026-05-05		1	Yes	Supports sync reliability.
+Wave 1	Module A	POC-01-03	Audio probe + validation	Load audio, inspect sample rate, duration, and mismatch against video.	DD	Medium	Planned	POC-01-01	Video+Audio optional	audio_probe_report.json	2026-05-06		2026-05-06		1	No	Run only if audio exists.
+Wave 1	Module A	POC-01-04	Telemetry CSV validation	Validate required columns, ordering, null cleanup, and schema checks.	DD	High	Planned	POC-00-01	Video+Telemetry optional	telemetry_probe_report.json	2026-05-06		2026-05-06		1	Yes	Run only if telemetry exists.
+Wave 1	Module B	POC-02-01	Canonical video timeline builder	Create canonical event timeline centered on exterior video FPS and duration.	DD	High	Planned	POC-01-01	Video required	canonical_timeline	2026-05-07		2026-05-07		1	Yes	Base time axis for all later modules.
+Wave 1	Module B	POC-02-02	Telemetry normalization + spike filtering	Convert units, filter impossible spikes, standardize signals.	DD	High	Planned	POC-01-04	Video+Telemetry optional	telemetry_cleaned.parquet	2026-05-07		2026-05-07		1	Yes	Skip if telemetry unavailable.
+Wave 1	Module B	POC-02-03	Visual motion proxy + sync offset estimation	Estimate visual motion using optical flow and correlate with telemetry.	DD	High	Planned	POC-02-01, POC-02-02	Video+Telemetry optional	sync_offset_ms	2026-05-08		2026-05-08		1	Yes	Telemetry downweighted if sync weak.
+Wave 1	Module B	POC-02-04	Telemetry interpolation + sync quality score	Interpolate telemetry to canonical timeline and compute sync confidence.	DD	High	Planned	POC-02-03	Video+Telemetry optional	sync_report.json, aligned_telemetry.parquet	2026-05-08		2026-05-08		1	Yes	Produces sync_quality_score.
+Wave 2	Module C	POC-03-01	Video quality checks	Compute blur, glare, luminance flicker, and compression artifact proxies.	DD	High	Planned	POC-02-01	Video required	frame_level_quality_table.parquet	2026-05-11		2026-05-11		1	Yes	Quality gating before feature extraction.
+Wave 2	Module C	POC-03-02	Audio quality checks	Estimate audio SNR, cabin noise, and mic occlusion heuristics.	DD	Medium	Planned	POC-01-03	Video+Audio optional	audio_quality_report.json	2026-05-11		2026-05-11		1	No	Support modality only.
+Wave 2	Module C	POC-03-03	Telemetry smoothing + event shape descriptors	Smooth telemetry and derive braking rise time, recovery time, speed delta.	DD	High	Planned	POC-02-04	Video+Telemetry optional	telemetry_shape_features.json	2026-05-12		2026-05-12		1	Yes	Used by trigger/outcome reasoning.
+Wave 2	Module C	POC-03-04	Clip-level quality flags	Combine modality quality outputs into clip-level flags.	DD	High	Planned	POC-03-01, POC-03-02, POC-03-03	All	quality_flags.json	2026-05-12		2026-05-12		1	Yes	Feeds confidence propagation.
+Wave 2	Module D1	POC-04-01	Baseline detector/tracker integration	Integrate runnable fallback detector/tracker and prepare YOLO/ByteTrack interface.	DD	High	Planned	POC-03-01	Video required	actor_track_table.parquet	2026-05-13		2026-05-14		2	Yes	Start with fallback path, keep YOLO hook ready.
+Wave 2	Module D1	POC-04-02	Scene feature matrix + key visual evidence	Compute track visibility, area growth, center speed, key evidence timestamps.	DD	High	Planned	POC-04-01	Video required	scene_feature_matrix.parquet, key_visual_evidence.json	2026-05-14		2026-05-14		1	Yes	Required for later state abstraction.
+Wave 2	Module D1	POC-04-03	Lane/drivable/depth hooks scaffolding	Prepare extension hooks for SegFormer, depth, TTC proxy, and in-path flags.	DD	Medium	Planned	POC-04-01	Video required	Perception extension scaffolds	2026-05-15		2026-05-15		1	No	May stay scaffold-only in PoC.
+Wave 2	Module D2	POC-05-01	Acoustic event extraction	Run onset detection, peak picking, RMS analysis, and merge nearby events.	DD	Medium	Planned	POC-03-02	Video+Audio optional	audio_event_markers.json	2026-05-13		2026-05-13		1	No	Audio remains support evidence only.
+Wave 2	Module D2	POC-05-02	Audio evidence summary + alignment	Summarize acoustic events and align to canonical timeline.	DD	Medium	Planned	POC-05-01, POC-02-01	Video+Audio optional	audio_feature_summary.json	2026-05-14		2026-05-14		1	No	Feeds temporal aggregation.
+Wave 2	Module D4	POC-06-01	Temporal multimodal aggregation	Aggregate video/audio/telemetry features into 250 ms, 500 ms, and 1 s windows.	DD	High	Planned	POC-04-02, POC-05-02, POC-03-03	All available	window_level_feature_table.parquet	2026-05-15		2026-05-15		1	Yes	Supports state abstraction.
+Wave 3	Module F	POC-07-01	Define state abstraction rules	Define brake, lead hazard, evasive maneuver, and lane departure states.	DD	High	Planned	POC-06-01	All available	State rule spec	2026-05-18		2026-05-18		1	Yes	Deterministic rules-first.
+Wave 3	Module F	POC-07-02	Build event state abstraction pipeline	Map window-level features to state labels and event-level summary.	DD	High	Planned	POC-07-01	All available	event_state_abstraction_table.parquet, event_state_summary.json	2026-05-18		2026-05-18		1	Yes	Bridge between features and reasoning.
+Wave 3	Module G	POC-08-01	Rules-first trigger reasoning	Rank likely triggers from state abstraction + modality summaries.	DD	High	Planned	POC-07-02	All available	trigger_result.json	2026-05-19		2026-05-19		1	Yes	Keep XGBoost hook ready.
+Wave 3	Module G	POC-08-02	Trigger model hook stub	Create disabled XGBoost loading/inference hook for later training.	DD	Low	Planned	POC-08-01	All available	Trigger model interface	2026-05-19		2026-05-19		1	No	Not required for first dry run.
+Wave 3	Module H	POC-09-01	Contradiction rules	Implement contradiction rules across visual/audio/telemetry evidence.	DD	High	Planned	POC-08-01	All available	contradiction_report.json	2026-05-20		2026-05-20		1	Yes	Examples: severe brake/no lead hazard.
+Wave 3	Module H	POC-09-02	Confidence propagation	Apply sync, glare, audio SNR, and contradiction-based confidence adjustments.	DD	High	Planned	POC-09-01, POC-03-04	All available	confidence_report.json	2026-05-20		2026-05-20		1	Yes	Sets reviewer attention if needed.
+Wave 3	Module I	POC-10-01	Baseline outcome reasoning	Produce rules-first ranking for No Collision / Possible / Near / Unavoidable / Collision.	DD	High	Planned	POC-07-02	All available	outcome_baseline_result.json	2026-05-21		2026-05-21		1	Yes	Model-assisted later, KB-governed now.
+Wave 3	Module I	POC-10-02	KB adjudication layer	Parse SME/KB rules and finalize policy-aligned outcome.	DD	High	Planned	POC-10-01, POC-09-02	All available	kb_validation_report.json, final_outcome_result.json	2026-05-21		2026-05-21		1	Yes	Deterministic-first validation.
+Wave 3	Module I	POC-10-03	Outcome model hook stub	Create disabled LightGBM loading/inference hook for later training.	DD	Low	Planned	POC-10-01	All available	Outcome model interface	2026-05-21		2026-05-21		1	No	Not required for first dry run.
+Wave 3	Packaging	POC-11-01	Final ReviewAssistPackage assembly	Assemble final JSON artifact, run manifest, and one-event dry run outputs.	DD	High	Planned	POC-08-01, POC-09-02, POC-10-02	All available	ReviewAssistPackage.json, run_manifest.json	2026-05-22		2026-05-22		1	Yes	Primary PoC milestone.
+Wave 3	Validation	POC-12-01	Multi-input mode validation	Validate video only, video+audio, video+telemetry, video+audio+telemetry modes.	DD	High	Planned	POC-11-01	All	Validation checklist	2026-05-22		2026-05-22		1	Yes	Confirms graceful degradation.
+																	
+		------------------
+
+    Wave	Module	Task Count	Tentative Start	Tentative End	"Week 1
+(04-08 May)"	"Week 2
+(11-15 May)"	"Week 3
+(18-22 May)"	Notes
+Wave 0	Foundation	2	2026-05-04	2026-05-04	ACTIVE			Cross-cutting
+Wave 1	Module A	4	2026-05-05	2026-05-06	ACTIVE			Core build
+Wave 1	Module B	4	2026-05-07	2026-05-08	ACTIVE			Core build
+Wave 2	Module C	4	2026-05-11	2026-05-12		ACTIVE		Core build
+Wave 2	Module D1	3	2026-05-13	2026-05-15		ACTIVE		Core build
+Wave 2	Module D2	2	2026-05-13	2026-05-14		ACTIVE		Core build
+Wave 2	Module D4	1	2026-05-15	2026-05-15		ACTIVE		Core build
+Wave 3	Module F	2	2026-05-18	2026-05-18			ACTIVE	Core build
+Wave 3	Module G	2	2026-05-19	2026-05-19			ACTIVE	Core build
+Wave 3	Module H	2	2026-05-20	2026-05-20			ACTIVE	Core build
+Wave 3	Module I	3	2026-05-21	2026-05-21			ACTIVE	Core build
+Wave 3	Packaging	1	2026-05-22	2026-05-22			ACTIVE	Cross-cutting
+Wave 3	Validation	1	2026-05-22	2026-05-22			ACTIVE	Cross-cutting
+
+
+                -----------------------
+                Yes — below is the **minimum task set per module** for this PoC.
+
+This is the **thin, fastest build scope**, not the full version.
+
+---
+
+# Module A — Ingest & media validation
+
+## Minimal tasks
+
+* Read input payload
+* Check whether exterior video path exists
+* Check whether optional audio path exists
+* Check whether optional telemetry file exists
+* Extract basic video metadata:
+
+  * FPS
+  * duration
+  * resolution
+* Extract basic audio metadata if present:
+
+  * sample rate
+  * duration
+* Validate telemetry CSV if present:
+
+  * required columns
+  * timestamp sorting
+* Run frame timestamp integrity check:
+
+  * missing frame heuristic
+  * duplicate frame heuristic
+  * variable FPS heuristic
+
+## Minimal outputs
+
+* `media_manifest.json`
+* `timestamp_integrity_report.json`
+* `audio_probe_report.json` if audio exists
+* `telemetry_probe_report.json` if telemetry exists
+
+---
+
+# Module B — Canonical time synchronization
+
+## Minimal tasks
+
+* Build canonical timeline from video FPS/duration
+* Normalize telemetry units if telemetry exists
+* Compute a simple visual motion proxy from video
+* Estimate telemetry-video offset using correlation
+* Resample telemetry onto video timeline
+* Compute `sync_quality_score`
+* Set a `downweight_telemetry` flag if sync is weak
+
+## Minimal outputs
+
+* `canonical_timeline`
+* `aligned_telemetry.parquet` if telemetry exists
+* `sync_report.json`
+
+---
+
+# Module C — Advanced preprocessing & quality gating
+
+## Minimal tasks
+
+### Video
+
+* Resize sampled frames
+* Compute blur score
+* Compute glare score
+* Compute luminance flicker proxy
+* Compute basic compression artifact proxy
+
+### Audio
+
+* Compute audio SNR
+* Flag persistent cabin noise
+* Flag possible mic occlusion
+
+### Telemetry
+
+* Smooth speed / acceleration if telemetry exists
+* Compute basic event-shape descriptors:
+
+  * peak braking duration
+  * braking rise time
+  * recovery time
+  * speed delta
+
+### Final
+
+* Build clip-level quality flags
+
+## Minimal outputs
+
+* `frame_level_quality_table.parquet`
+* `video_quality_summary.json`
+* `audio_quality_report.json` if audio exists
+* `telemetry_shape_features.json` if telemetry exists
+* `quality_flags.json`
+
+---
+
+# Module D1 — Exterior video scene evidence
+
+## Minimal tasks
+
+* Run a basic detector on sampled frames
+* Run basic tracking across sampled frames
+* Build `actor_track_table`
+* Compute simple per-track motion features:
+
+  * first appearance time
+  * last appearance time
+  * visibility duration
+  * bbox area
+  * area growth rate
+  * center motion speed
+* Select key visual evidence timestamps
+
+## Minimal outputs
+
+* `actor_track_table.parquet`
+* `scene_feature_matrix.parquet`
+* `key_visual_evidence.json`
+
+## For this PoC minimum
+
+You do **not** need full lane/drivable/depth/TTC in the first pass if that slows you down.
+
+---
+
+# Module D2 — Audio evidence
+
+## Minimal tasks
+
+* Load audio waveform
+* Compute onset strength
+* Detect acoustic peaks
+* Compute RMS energy
+* Merge nearby peaks into acoustic events
+* Create simple audio event markers
+
+## Minimal outputs
+
+* `audio_event_markers.json`
+* `audio_feature_summary.json`
+
+## Minimal rule
+
+Audio remains **support evidence only**.
+
+---
+
+# Module D4 — Temporal window aggregation
+
+## Minimal tasks
+
+* Create 250 ms windows
+* Create 500 ms windows
+* Create 1 s windows
+* Aggregate available video/audio/telemetry features into those windows
+
+## Minimal outputs
+
+* `window_level_feature_table.parquet`
+
+---
+
+# Module F — Event state abstraction layer
+
+## Minimal tasks
+
+* Define rule thresholds for event states
+* Derive:
+
+  * `brake_event_state`
+  * `lead_hazard_state`
+  * `evasive_maneuver_state`
+* Add `lane_departure_state` only if supporting video features exist
+* Create one event-level abstraction summary
+
+## Minimal outputs
+
+* `event_state_abstraction_table.parquet`
+* `event_state_summary.json`
+
+---
+
+# Module G — Trigger reasoning engine
+
+## Minimal tasks
+
+* Build a structured feature vector from:
+
+  * event states
+  * video evidence summary
+  * audio evidence summary
+  * telemetry summary if available
+* Implement rules-first trigger ranking
+* Return:
+
+  * top trigger
+  * ranked trigger candidates
+  * trigger confidence
+
+## Minimal outputs
+
+* `trigger_result.json`
+
+## Minimal rule
+
+Do **not** wait for XGBoost training.
+Keep only a model hook placeholder.
+
+---
+
+# Module H — Contradiction detection + confidence propagation
+
+## Minimal tasks
+
+* Add contradiction rules such as:
+
+  * severe braking but no lead hazard
+  * impact-like audio but no speed drop
+  * weak sync but telemetry-heavy decision
+* Add confidence adjustment rules such as:
+
+  * low sync lowers telemetry contribution
+  * glare caps perception confidence
+  * low audio SNR lowers audio contribution
+* Set reviewer attention flag when needed
+
+## Minimal outputs
+
+* `contradiction_report.json`
+* `confidence_report.json`
+
+---
+
+# Module I — Outcome reasoning + KB adjudication
+
+## Minimal tasks
+
+* Build a structured outcome feature vector
+* Implement rules-first outcome ranking
+* Support the 5 outcome classes:
+
+  * No Collision
+  * Possible Collision
+  * Near Collision
+  * Near Collision - Unavoidable
+  * Collision
+* Apply KB/policy adjudication rules
+* Return final outcome and confidence
+
+## Minimal outputs
+
+* `outcome_result.json`
+* `kb_validation_report.json`
+
+## Minimal rule
+
+Do **not** wait for LightGBM training.
+Keep only a model hook placeholder.
+
+---
+
+# Minimal final artifact for the PoC
+
+Even though it is not a separate big module, the PoC should still write:
+
+## Minimal packaging tasks
+
+* Combine outputs from Modules A–I
+* Write:
+
+  * `ReviewAssistPackage.json`
+  * `run_manifest.json`
+
+---
+
+# Shortest possible build sequence
+
+If you want the most practical minimal execution order:
+
+1. Module A
+2. Module B
+3. Module C
+4. Module D1
+5. Module D2
+6. Module D4
+7. Module F
+8. Module G
+9. Module H
+10. Module I
+11. Final JSON artifact
+
+---
+
+# One-line summary
+
+The **minimum PoC** is:
+
+**validate inputs → align time → quality-gate signals → extract basic video/audio evidence → aggregate into windows → derive event states → rank trigger → detect contradictions / adjust confidence → rank outcome with KB adjudication → write final JSON**
+
+If you want, I can also turn this into a **very small “Must Have / Good to Have / Later” table** for each module.
+--------------------
+
+| Module                                                          | Must Have                                                                                                                                                                                                                                                                                                 | Good to Have                                                                                                                        | Later                                                                                                                              |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Module A — Ingest & media validation**                        | validate exterior video path; validate optional audio path; validate optional telemetry path; extract basic video metadata (FPS, duration, resolution); extract basic audio metadata if available; validate telemetry required columns if available; detect missing / duplicate / variable-FPS heuristics | richer codec/container metadata; duration mismatch warnings between video and audio; cleaner error categorization                   | remote object-store pulling; retry/resilience logic; deeper corruption diagnostics                                                 |
+| **Module B — Canonical time synchronization**                   | canonical video timeline; telemetry unit normalization; telemetry resampling to video timeline; simple visual motion proxy; cross-correlation offset estimation; sync quality score; downweight flag for weak sync                                                                                        | better drift correction; multiple sync strategies; visual + audio + telemetry joint alignment                                       | robust piecewise drift correction; adaptive sync confidence by event segment; multimodal alignment diagnostics dashboard           |
+| **Module C — Advanced preprocessing & quality gating**          | video resize; blur score; glare score; luminance flicker proxy; audio SNR; basic noise / mic issue flags; telemetry smoothing; simple event-shape features; clip-level quality flags                                                                                                                      | compression artifact proxy; darkness / low-light flag; persistent cabin-noise detection; telemetry spike filtering refinements      | rain / haze / windshield condition tags; rolling shutter / vibration quality features; camera calibration / undistortion support   |
+| **Module D1 — Exterior video scene evidence**                   | basic detector; basic tracker; actor track table; per-track motion summaries; key visual evidence timestamps                                                                                                                                                                                              | YOLO11x integration; ByteTrack integration; better scene feature matrix; area growth rate; visibility duration; center motion speed | lane / drivable reasoning; depth estimation; TTC proxy; in-path reasoning; reaction delay estimation; stronger ego-motion handling |
+| **Module D2 — Audio evidence**                                  | load waveform; onset detection; peak picking; RMS analysis; merged acoustic event markers                                                                                                                                                                                                                 | horn-like candidate tags; impact-like candidate tags; rough-road / harsh audio tags                                                 | audio transcription; speech-content extraction; richer acoustic classification models                                              |
+| **Module D4 — Temporal window aggregation**                     | 250 ms windows; 500 ms windows; 1 s windows; aggregation of available modality features                                                                                                                                                                                                                   | per-window modality availability flags; separate pre-trigger / trigger / post-trigger buckets                                       | adaptive windowing; event-driven segmentation; uncertainty-aware aggregation                                                       |
+| **Module F — Event state abstraction layer**                    | `brake_event_state`; `lead_hazard_state`; `evasive_maneuver_state`; event-level state summary                                                                                                                                                                                                             | `lane_departure_state`; state confidence; explicit state transition timeline                                                        | richer state ontology; multi-actor interaction states; graph-based event-state abstraction                                         |
+| **Module G — Trigger reasoning engine**                         | rules-first trigger ranking; top trigger; ranked trigger list; trigger confidence                                                                                                                                                                                                                         | XGBoost hook; feature vector builder; confidence calibration                                                                        | trained XGBoost model; hybrid rule + model fusion; trigger explanation via feature attribution                                     |
+| **Module H — Contradiction detection + confidence propagation** | contradiction rules; confidence downweight rules; reviewer attention flag; contradiction flag                                                                                                                                                                                                             | evidence consistency score; modality-specific confidence decomposition; per-rule contradiction logging                              | contradiction taxonomy; contradiction analytics dashboard; uncertainty propagation by time window                                  |
+| **Module I — Outcome reasoning + KB adjudication**              | baseline outcome ranking; 5-class outcome support; KB rule application; final outcome selection; outcome confidence                                                                                                                                                                                       | LightGBM hook; richer adjudication report; explicit policy trace                                                                    | trained LightGBM model; hybrid model + KB fusion; reviewer override learning loop                                                  |
+| **Final local artifact writing**                                | `ReviewAssistPackage.json`; `run_manifest.json`                                                                                                                                                                                                                                                           | structured debug artifact index; consistent artifact versioning                                                                     | DB persistence; API output layer; UI-ready payload contract                                                                        |
+
+If you want, I can also turn this into a **CSV-style table** that you can paste directly into Excel.
