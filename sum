@@ -1,0 +1,23 @@
+Foundation
+
+Foundation work establishes the core Release 1 baseline required for the control plane to function consistently across services. It includes freezing the Release 1 architecture, defining and versioning the core contracts (RequestEnvelope, ExecutionPlan, TaskNode, StateCheckpoint, SupervisorDecision, ReplanRequest), implementing schema validation, setting up request intake and normalization, and establishing correlation ID and trace-context propagation. This bucket also includes aligning baseline interface assumptions with Governance, Memory, and Observability so the rest of the runtime can be built on stable foundations.
+
+Supervisor
+
+Supervisor is the top control authority in the new architecture. Its work includes request assessment and control-level intent understanding, planning strategy selection, risk and policy interpretation, runtime checkpoint evaluation, failure and low-confidence analysis, and supervisory decisions such as continue, retry, re-plan, escalate, or stop. It also produces escalation artifacts, replan triggers, and supervisory telemetry, making it the governing brain of the control plane rather than a passive monitor.
+
+Planner
+
+Planner is the plan-synthesis layer. Its work includes transforming supervisory intent and constraints into a structured ExecutionPlan, performing semantic decomposition, selecting planning templates or playbooks, generating dynamic task graphs, building and normalizing plan objects, validating plan feasibility and constraints, adding plan annotations, versioning plans, and handling replanning from partial state and failure context. Planner also integrates with memory to retrieve procedural, semantic, and episodic context needed for better planning.
+
+Orchestrator
+
+Orchestrator is the deterministic runtime engine. Its work includes loading approved plans, managing execution lifecycle, scheduling ready tasks, resolving dependencies, dispatching tools, agents, APIs, and MCP tools, maintaining live runtime state, emitting checkpoints, handling bounded retries and timeouts, supporting pause/resume behavior, and integrating updated plans during replanning. It also writes execution context and runtime artifacts back to memory and observability systems.
+
+Shared
+
+Shared work covers the cross-layer overlaps required for Release 1 but owned jointly or in coordination with adjacent teams. This includes governance context contracts such as role, risk, thresholds, and escalation rules; memory interaction contracts for planning context, execution context, checkpoint write-backs, and replan artifacts; and observability contracts for event schema, reasoning-safe logging, and trace/correlation standards. Shared tasks ensure the control plane integrates cleanly with external platform layers without owning their internals.
+
+Integration
+
+Integration work connects the three core control-plane components into one working runtime loop. It includes wiring Planner ↔ Orchestrator contracts, wiring Orchestrator ↔ Supervisor checkpoint and decision loops, implementing the full replan workflow, implementing escalation flow, validating happy-path and failure-path execution, and proving end-to-end behavior across representative enterprise scenarios. This bucket also includes contract tests, component tests, resilience testing, workflow validation, stabilization, and release-readiness activities needed to complete Release 1.
